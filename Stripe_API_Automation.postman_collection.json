@@ -1,0 +1,650 @@
+{
+	"info": {
+		"_postman_id": "37adbf37-b6e1-4c64-96bf-bebfdeeceb54",
+		"name": "Stripe API Automation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24239008"
+	},
+	"item": [
+		{
+			"name": "List Customers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Validate the response schema for the data array\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData.data).to.be.an('array').that.is.not.empty;\r",
+							"    \r",
+							"    responseData.data.forEach(function (customer) {\r",
+							"        pm.expect(customer).to.have.property('id');\r",
+							"        pm.expect(customer).to.have.property('balance');\r",
+							"        pm.expect(customer).to.have.property('created');\r",
+							"        pm.expect(customer).to.have.property('delinquent');\r",
+							"        pm.expect(customer).to.have.property('email');\r",
+							"        pm.expect(customer).to.have.property('livemode');\r",
+							"        pm.expect(customer).to.have.property('metadata');\r",
+							"        pm.expect(customer).to.have.property('name');\r",
+							"        pm.expect(customer).to.have.property('tax_exempt');\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Ensure the invoice_settings object within the data array has the expected structure and fields\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"\r",
+							"    pm.expect(responseData.data).to.be.an('array').that.is.not.empty;\r",
+							"\r",
+							"    responseData.data.forEach(function(customer) {\r",
+							"        if (customer.invoice_settings) {\r",
+							"            pm.expect(customer.invoice_settings).to.be.an('object');\r",
+							"            pm.expect(customer.invoice_settings.custom_fields).to.be.null;\r",
+							"            pm.expect(customer.invoice_settings.default_payment_method).to.be.null;\r",
+							"            pm.expect(customer.invoice_settings.footer).to.be.null;\r",
+							"            pm.expect(customer.invoice_settings.rendering_options).to.be.null;\r",
+							"        }\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Preferred locales array within data is present and not empty\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData.data).to.be.an('array').that.is.not.empty;\r",
+							"    responseData.data.forEach(function(customer) {\r",
+							"        pm.expect(customer.preferred_locales).to.be.an('array').that.is.empty;\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{stripe_base_url}}/customers",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create customer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Customer ID is present\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.id).to.exist;\r",
+							"    // Save ID for future requests\r",
+							"    pm.environment.set(\"customer_id\", jsonData.id); \r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify the response body schema\", function () {\r",
+							"    const schema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"properties\": {\r",
+							"            \"id\": { \"type\": \"string\" },\r",
+							"            \"object\": { \"type\": \"string\" },\r",
+							"            \"address\": { \"type\": [\"object\", \"null\"] },\r",
+							"            \"balance\": { \"type\": \"number\" },\r",
+							"            \"created\": { \"type\": \"number\" },\r",
+							"            \"currency\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"default_source\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"delinquent\": { \"type\": \"boolean\" },\r",
+							"            \"description\": { \"type\": \"string\" },\r",
+							"            \"discount\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"email\": { \"type\": \"string\" },\r",
+							"            \"invoice_prefix\": { \"type\": \"string\" },\r",
+							"            \"invoice_settings\": {\r",
+							"                \"type\": \"object\",\r",
+							"                \"properties\": {\r",
+							"                    \"custom_fields\": { \"type\": [\"object\", \"null\"] },\r",
+							"                    \"default_payment_method\": { \"type\": [\"string\", \"null\"] },\r",
+							"                    \"footer\": { \"type\": [\"string\", \"null\"] },\r",
+							"                    \"rendering_options\": { \"type\": [\"object\", \"null\"] }\r",
+							"                },\r",
+							"                \"required\": [\"custom_fields\", \"default_payment_method\", \"footer\", \"rendering_options\"]\r",
+							"            },\r",
+							"            \"livemode\": { \"type\": \"boolean\" },\r",
+							"            \"metadata\": { \"type\": \"object\" },\r",
+							"            \"name\": { \"type\": \"string\" },\r",
+							"            \"phone\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"preferred_locales\": { \"type\": \"array\" },\r",
+							"            \"shipping\": { \"type\": [\"object\", \"null\"] },\r",
+							"            \"tax_exempt\": { \"type\": \"string\" },\r",
+							"            \"test_clock\": { \"type\": [\"string\", \"null\"] }\r",
+							"        },\r",
+							"        \"required\": [\"id\", \"object\", \"balance\", \"created\", \"delinquent\", \"description\", \"email\", \"invoice_prefix\", \"invoice_settings\", \"livemode\", \"metadata\", \"name\", \"preferred_locales\", \"tax_exempt\"]\r",
+							"    };\r",
+							"    pm.expect(pm.response.json()).to.have.jsonSchema(schema);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{secret_key}}",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "Tony Stark {{$randomInt}}",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "bentester{{$randomInt}}@example.com",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "Test customer for Stripe API {{$randomInt}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{stripe_base_url}}/customers",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retrieve customer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"//Check the customer id returned against the customer id saved in the environment.\r",
+							"pm.test(\"Correct Customer ID\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.id).to.eql(pm.environment.get(\"customer_id\"));\r",
+							"});\r",
+							"\r",
+							"// Check if the response body has the expected properties\r",
+							"pm.test(\"Response body has the expected properties\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('id');\r",
+							"    pm.expect(jsonData).to.have.property('object');\r",
+							"    pm.expect(jsonData).to.have.property('balance');\r",
+							"    pm.expect(jsonData).to.have.property('created');\r",
+							"    pm.expect(jsonData).to.have.property('description');\r",
+							"    pm.expect(jsonData).to.have.property('email');\r",
+							"    pm.expect(jsonData).to.have.property('invoice_prefix');\r",
+							"    pm.expect(jsonData).to.have.property('invoice_settings');\r",
+							"    pm.expect(jsonData).to.have.property('livemode');\r",
+							"    pm.expect(jsonData).to.have.property('metadata');\r",
+							"    pm.expect(jsonData).to.have.property('name');\r",
+							"    pm.expect(jsonData).to.have.property('tax_exempt');\r",
+							"});\r",
+							"\r",
+							"// Schema validation for the response body\r",
+							"pm.test(\"Schema validation for the response body\", function () {\r",
+							"    var schema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"properties\": {\r",
+							"            \"id\": {\"type\": \"string\"},\r",
+							"            \"object\": {\"type\": \"string\"},\r",
+							"            \"balance\": {\"type\": \"number\"},\r",
+							"            \"created\": {\"type\": \"number\"},\r",
+							"            \"description\": {\"type\": \"string\"},\r",
+							"            \"email\": {\"type\": \"string\"},\r",
+							"            \"invoice_prefix\": {\"type\": \"string\"},\r",
+							"            \"invoice_settings\": {\r",
+							"                \"type\": \"object\",\r",
+							"                \"properties\": {\r",
+							"                    \"custom_fields\": {\"type\": \"null\"},\r",
+							"                    \"default_payment_method\": {\"type\": \"null\"},\r",
+							"                    \"footer\": {\"type\": \"null\"},\r",
+							"                    \"rendering_options\": {\"type\": \"null\"}\r",
+							"                }\r",
+							"            },\r",
+							"            \"livemode\": {\"type\": \"boolean\"},\r",
+							"            \"metadata\": {\"type\": \"object\"},\r",
+							"            \"name\": {\"type\": \"string\"},\r",
+							"            \"tax_exempt\": {\"type\": \"string\"}\r",
+							"        },\r",
+							"        \"required\": [\"id\", \"object\", \"balance\", \"created\", \"description\", \"email\", \"invoice_prefix\", \"invoice_settings\", \"livemode\", \"metadata\", \"name\", \"tax_exempt\"]\r",
+							"    };\r",
+							"    pm.expect(pm.response.json()).to.have.jsonSchema(schema);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{secret_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{stripe_base_url}}/customers/{{customer_id}}",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"customers",
+						"{{customer_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Make payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Payment intent ID is present\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.id).to.exist;\r",
+							"    // Save ID for future requests\r",
+							"    pm.environment.set(\"payment_intent_id\", jsonData.id); \r",
+							"});\r",
+							"\r",
+							"// Test for the payment intent object type\r",
+							"pm.test(\"Payment intent object type is 'payment_intent'\", function () {\r",
+							"    pm.expect(pm.response.json().object).to.equal('payment_intent');\r",
+							"});\r",
+							"\r",
+							"// Test for the currency type\r",
+							"pm.test(\"Currency type is 'usd'\", function () {\r",
+							"    pm.expect(pm.response.json().currency).to.equal('usd');\r",
+							"});\r",
+							"\r",
+							"// Test for the amount received\r",
+							"pm.test(\"Amount received is 0\", function () {\r",
+							"    pm.expect(pm.response.json().amount_received).to.equal(0);\r",
+							"});\r",
+							"\r",
+							"// Test for the payment method types\r",
+							"pm.test(\"Payment method types include 'card'\", function () {\r",
+							"    pm.expect(pm.response.json().payment_method_types).to.include('card');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{secret_key}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "amount",
+							"value": "1000",
+							"type": "text"
+						},
+						{
+							"key": "currency",
+							"value": "usd",
+							"type": "text"
+						},
+						{
+							"key": "payment_method_types[]",
+							"value": "card",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{stripe_base_url}}/payment_intents",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"payment_intents"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Confirm Payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test for status code\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// Test for checking the payment_intent id in the response body\r",
+							"pm.test(\"Payment Intent ID exists in the response\", function () {\r",
+							"    pm.expect(pm.response.json().id).to.exist;\r",
+							"    pm.expect(pm.response.json().id).to.be.a('string');\r",
+							"});\r",
+							"\r",
+							"// Test for checking the payment method type in the response body\r",
+							"pm.test(\"Payment Method Type exists in the response\", function () {\r",
+							"    pm.expect(pm.response.json().payment_method).to.exist;\r",
+							"    pm.expect(pm.response.json().payment_method).to.be.a('string');\r",
+							"});\r",
+							"\r",
+							"// Test for response body schema validation\r",
+							"pm.test(\"Response body has a valid schema\", function () {\r",
+							"    const schema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"properties\": {\r",
+							"            \"id\": { \"type\": \"string\" },\r",
+							"            \"object\": { \"type\": \"string\" },\r",
+							"            \"amount\": { \"type\": \"number\" },\r",
+							"            \"amount_capturable\": { \"type\": \"number\" },\r",
+							"            \"amount_details\": {\r",
+							"                \"type\": \"object\",\r",
+							"                \"properties\": {\r",
+							"                    \"tip\": { \"type\": \"object\" }\r",
+							"                }\r",
+							"            },\r",
+							"            // Add more properties as per the schema\r",
+							"            \"status\": { \"type\": \"string\" }\r",
+							"        },\r",
+							"        \"required\": [\"id\", \"object\", \"amount\", \"amount_capturable\", \"amount_details\", \"status\"]\r",
+							"    };\r",
+							"    pm.expect(tv4.validate(pm.response.json(), schema)).to.be.true;\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "payment_method",
+							"value": "pm_card_visa",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{stripe_base_url}}/payment_intents/{{payment_intent_id}}/confirm",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"payment_intents",
+						"{{payment_intent_id}}",
+						"confirm"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Customer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Customer name is updated\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.name).to.include(\"Updated\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response time is less than 100ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify the response body schema\", function () {\r",
+							"    const schema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"properties\": {\r",
+							"            \"id\": { \"type\": \"string\" },\r",
+							"            \"object\": { \"type\": \"string\" },\r",
+							"            \"address\": { \"type\": [\"object\", \"null\"] },\r",
+							"            \"balance\": { \"type\": \"number\" },\r",
+							"            \"created\": { \"type\": \"number\" },\r",
+							"            \"currency\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"default_source\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"delinquent\": { \"type\": \"boolean\" },\r",
+							"            \"description\": { \"type\": \"string\" },\r",
+							"            \"discount\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"email\": { \"type\": \"string\" },\r",
+							"            \"invoice_prefix\": { \"type\": \"string\" },\r",
+							"            \"invoice_settings\": {\r",
+							"                \"type\": \"object\",\r",
+							"                \"properties\": {\r",
+							"                    \"custom_fields\": { \"type\": [\"array\", \"null\"] },\r",
+							"                    \"default_payment_method\": { \"type\": [\"string\", \"null\"] },\r",
+							"                    \"footer\": { \"type\": [\"string\", \"null\"] },\r",
+							"                    \"rendering_options\": { \"type\": [\"object\", \"null\"] }\r",
+							"                }\r",
+							"            },\r",
+							"            \"livemode\": { \"type\": \"boolean\" },\r",
+							"            \"metadata\": { \"type\": \"object\" },\r",
+							"            \"name\": { \"type\": \"string\" },\r",
+							"            \"phone\": { \"type\": [\"string\", \"null\"] },\r",
+							"            \"preferred_locales\": { \"type\": \"array\" },\r",
+							"            \"shipping\": { \"type\": [\"object\", \"null\"] },\r",
+							"            \"tax_exempt\": { \"type\": \"string\" },\r",
+							"            \"test_clock\": { \"type\": [\"string\", \"null\"] }\r",
+							"        },\r",
+							"        \"required\": [\"id\", \"object\", \"balance\", \"created\", \"delinquent\", \"description\", \"email\", \"invoice_prefix\", \"invoice_settings\", \"livemode\", \"metadata\", \"name\", \"preferred_locales\", \"tax_exempt\"]\r",
+							"    };\r",
+							"    pm.expect(pm.response.json()).to.have.jsonSchema(schema);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "Updated Tony {{$randomInt}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{stripe_base_url}}/customers/{{customer_id}}",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"customers",
+						"{{customer_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Customer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Customer is deleted\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.deleted).to.be.true;\r",
+							"});\r",
+							"\r",
+							"// Schema validation test\r",
+							"pm.test(\"Response body has correct schema\", function () {\r",
+							"    const schema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"properties\": {\r",
+							"            \"id\": { \"type\": \"string\" },\r",
+							"            \"object\": { \"type\": \"string\" },\r",
+							"            \"deleted\": { \"type\": \"boolean\" }\r",
+							"        },\r",
+							"        \"required\": [\"id\", \"object\", \"deleted\"]\r",
+							"    };\r",
+							"    pm.response.to.have.jsonSchema(schema);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{stripe_base_url}}/customers/{{customer_id}}",
+					"host": [
+						"{{stripe_base_url}}"
+					],
+					"path": [
+						"customers",
+						"{{customer_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "{{secret_key}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
