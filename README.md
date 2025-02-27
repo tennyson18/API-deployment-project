@@ -1,7 +1,6 @@
 <<<<<<< HEAD
 # API-deployment-project
 =======
-"# API-deployment-project" 
->>>>>>> a3b5e2f (first commit)
-"# API-deployment-project" 
-"# API-deployment-project" 
+🔍 
+Automated CRUD operations for Stripe's Customer and Payment API.
+Data-driven tests with dynamic parameterization.
