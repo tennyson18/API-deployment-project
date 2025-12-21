@@ -1,37 +1,99 @@
-name: Run API Tests
+name: API Test Automation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
+    name: Run API Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-        
-      - name: Install Node.js
-        uses: actions/setup-node@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install Newman
-        run: npm install -g newman
+        run: npm install -g newman newman-reporter-htmlextra
 
-      - name: Run API Tests
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Run API tests
+        env:
+          STRIPE_API_KEY: ${{ secrets.STRIPE_TEST_API_KEY }}
         run: |
-          newman run Stripe_API_Automation.postman_collection.json \
-          -e Stripe_Test.postman_environment.json \
-          -r cli,html
+          newman run collections/stripe-api-main.json \
+            --environment environments/staging.json \
+            --env-var "api_key=$STRIPE_API_KEY" \
+            --reporters cli,htmlextra \
+            --reporter-htmlextra-export reports/test-report.html \
+            --reporter-htmlextra-title "Stripe API Test Report" \
+            --color on
 
-      - name: Upload Test Report
+      - name: Upload test report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
-          path: newman/*.html
+          name: test-reports
+          path: reports/
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ API tests completed! Check the artifacts for detailed reports.'
+            })
+
+# name: Run API Tests
+
+# on:
+#  push:
+#    branches:
+#      - main
+#  pull_request:
+#    branches:
+#      - main
+
+#jobs:
+#  test:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v2
+#
+#      - name: Install Node.js
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: '16'
+
+#      - name: Install Newman
+#        run: npm install -g newman
+
+#      - name: Run API Tests
+#        run: |
+#          newman run Stripe_API_Automation.postman_collection.json \
+#          -e Stripe_Test.postman_environment.json \
+#          -r cli,html
+
+#      - name: Upload Test Report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: test-report
+#          path: newman/*.html
