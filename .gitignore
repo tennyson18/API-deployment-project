@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Newman Reports
+newman/
+reports/
+
+# Environment files with secrets
+.env
+*.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test artifacts
+test-results/
+coverage/
